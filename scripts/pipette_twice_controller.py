@@ -22,7 +22,7 @@ import torch
 import torch.nn.functional as F
 from torchvision import transforms
 import sys
-from my_robot_msgs.srv import PipetteDo, PipetteDoResponse
+from my_robot_msgs.srv import PipetteDoTwice, PipetteDoTwiceResponse
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
@@ -35,7 +35,7 @@ from model import SimpleCNN
 
 class PipetteController:
     def __init__(self):
-        rospy.init_node('pipette_controller', anonymous=True)
+        rospy.init_node('pipette_twice_controller', anonymous=True)
 
         # 订阅
         rospy.Subscriber("/labware/tip_rack5/obb", LabwareOBB, self.cb_tip_rack)
@@ -105,7 +105,7 @@ class PipetteController:
         # 服务
         self._busy_lock = threading.Lock()
 
-        self.do_srv = rospy.Service("/pipette/do", PipetteDo, self.cb_pipette_do)
+        self.do_srv = rospy.Service("/pipette/dotwice", PipetteDoTwice, self.cb_pipette_do)
 
     # 回调
     def cb_tip_rack(self, msg):
@@ -145,23 +145,23 @@ class PipetteController:
     def cb_pipette_do(self, req):
         try:
             self.pick_pipette()
+
+            # first droplet
             self.attach_tip(tip_id=req.tip_id)
+            self.aspirate(volume=int(req.volume_ul))
+            self.dispense(id=1)
+            self.dispose_of_tip()
 
-            if req.liquid.lower() == "hcl":
-                self.aspirate(volume=int(req.volume_ul))
-                self.dispense()
-            elif req.liquid.lower() == "water":
-                self.aspirate_water(volume=int(req.volume_ul))
-                self.dispense()
-            else:
-                return PipetteDoResponse(False, "Unknown liquid type")
-
+            # second droplet
+            self.attach_tip(tip_id=req.tip_id + 1)
+            self.aspirate_water(volume=int(req.volume_ul))
+            self.dispense(id=2)
             self.dispose_of_tip()
             self.place_pipette()
-            return PipetteDoResponse(True, f"Pipette {req.liquid} once")
+            return PipetteDoTwiceResponse(True, f"Pipette once")
         except Exception as e:
             rospy.logerr(f"pipette_do failed: {e}")
-            return PipetteDoResponse(False, str(e))
+            return PipetteDoTwiceResponse(False, str(e))
 
     # -------------------- 各步骤 ------------------------
 
@@ -323,7 +323,7 @@ class PipetteController:
     def attach_tip(self, tip_id=0):
         rospy.loginfo("Moving to tip rack...")
         x_list = [-44, -56, -67.8, -78, -87.5, -99.7]
-        y_list = [261, 260, 259.8, 259.5, 259, 258.5]
+        y_list = [261, 257, 259.8, 259.5, 259, 258.5]  # y_list[1] changed to 257 from 260
 
         x_mm = x_list[tip_id]
         y_mm = y_list[tip_id]
@@ -482,31 +482,43 @@ class PipetteController:
         # 上升到beaker上方
         self.go_to_arm_pose([x_mm, y_mm, z_mm, roll, pitch, yaw])
 
-    def dispense(self):
+    def dispense(self, id):
         rospy.loginfo("Go to dispense beaker...")
 
-        x_mm = -228.6
-        y_mm = 236.4
-        z_mm = 416.1
-        roll = 175
-        pitch = 24.6
-        yaw = -68.9
+        if id == 1:
+            x_mm = -190.1 + 2.5 + 7.5 - 1.5
+            y_mm = 285.2 - 5 - 5
+            z_mm = 407.7
+            roll = 169.7
+            pitch = 10.3
+            yaw = -87.1
+        else:
+            x_mm = -194.9 + 5
+            y_mm = 285.2
+            z_mm = 417
+            roll = 167.7
+            pitch = 9.7
+            yaw = -86.4
+
         # 到beaker上方
         self.go_to_arm_pose([x_mm, y_mm, z_mm, roll, pitch, yaw])
 
         rospy.sleep(0.5)
 
         # 下降到beaker内部
-        y_mm2 = y_mm + 13.9
-        z_mm2 = z_mm - 36.9
+        if id == 1:
+            z_mm2 = 343.7
+        else:
+            z_mm2 = 342.4
 
-        self.go_to_arm_pose([x_mm, y_mm2, z_mm2, roll, pitch, yaw])
+        self.go_to_arm_pose([x_mm, y_mm, z_mm2, roll, pitch, yaw])
+        rospy.sleep(0.5)
 
         rospy.loginfo("Dispensing liquid...")
 
         self.pipetty_home_pub.publish(Bool(True))
 
-        rospy.sleep(6.0)
+        rospy.sleep(10)
 
         self.go_to_arm_pose([x_mm, y_mm, z_mm, roll, pitch, yaw])
         rospy.sleep(0.5)
@@ -620,7 +632,7 @@ class PipetteController:
 if __name__ == '__main__':
     controller = PipetteController()
 
-    rospy.loginfo("[pipette_controller] ready, waiting for /pipette/do service calls ...")
+    rospy.loginfo("[pipette_controller] ready, waiting for /pipette/dotwice service calls ...")
     rospy.spin()
 
     # controller.pick_pipette()

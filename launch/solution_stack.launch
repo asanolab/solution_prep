@@ -1,0 +1,31 @@
+<launch>
+  <!-- 把三个节点放在同一个分组/命名空间下 -->
+  <group ns="solution_preparation">
+
+    <!-- 1) Pipette 控制节点：仅在 /pipette/do service 调用时执行整套流程 -->
+    <node pkg="solution_prep" type="pipette_controller.py" name="pipette_controller" output="screen">
+      <!-- tip识别模型相关（按你的脚本路径，可改） -->
+      <param name="model_path" value="$(find solution_prep)/scripts/1734448311.8315692/best.pth"/>
+    </node>
+
+    <!-- 2) pH 测量节点：仅在 /ph/measure service 调用时执行抓取→测量→放回 -->
+    <node pkg="solution_prep" type="pH_controller.py" name="ph_sensor_controller" output="screen">
+      <!-- 节点会把当前 pH 发布到 /solution/current_ph（latched） -->
+    </node>
+
+    <!-- 3) 烧杯操控/振荡节点：仅在 /beaker/shake service 调用时执行 -->
+    <node pkg="solution_prep" type="beaker_manipulator.py" name="beaker_manipulator" output="screen">
+    </node>
+    
+    <!-- 4) 镊子节点：仅在 /tweezers/draw service 调用时执行 -->
+    <node pkg="solution_prep" type="tweezers_controller.py" name="tweezers_controllers" output="screen">
+    </node>
+    
+    <!-- 5) PipetteTwice 控制节点：仅在 /pipette/dotwice service 调用时执行整套流程 -->
+    <node pkg="solution_prep" type="pipette_twice_controller.py" name="pipette_twice_controller" output="screen">
+      <!-- tip识别模型相关（按你的脚本路径，可改） -->
+      <param name="model_path" value="$(find solution_prep)/scripts/1734448311.8315692/best.pth"/>
+    </node>
+
+  </group>
+</launch>

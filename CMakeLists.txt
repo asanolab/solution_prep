@@ -164,6 +164,12 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
  catkin_install_python(PROGRAMS
    scripts/pipette_controller.py
+   scripts/pH_controller.py
+   scripts/beaker_manipulator.py
+   scripts/orchestrator.py
+   scripts/tweezers_controller.py
+   scripts/pipette_twice_controller.py
+   scripts/IPC.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 
