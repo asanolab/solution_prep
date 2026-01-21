@@ -1,3 +1,8 @@
+# Install
+```
+python3 -m pip install torch
+```
+
 # Launch file
 First launch the solution_stack.launch file to prepare all the nodes.
 
