@@ -7,7 +7,7 @@ python3 -m pip install torch
 First launch the solution_stack.launch file to prepare all the nodes.
 
 ```
-$ roslaunch solution_prep solution_stack.launch
+roslaunch solution_prep solution_stack.launch
 ```
 
 # Conduct experiments
@@ -15,7 +15,7 @@ $ roslaunch solution_prep solution_stack.launch
 
 2. Or use orchestrator node to conduct the whole experiment of solution preparation at a target pH.
 ```
-$ rosrun solution_prep orchestrator.py
+rosrun solution_prep orchestrator.py
 ```
 
 Avaiable parameters:
