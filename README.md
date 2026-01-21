@@ -4,8 +4,13 @@ python3 -m pip install torch torchvision
 ```
 
 # Launch file
-First launch the solution_stack.launch file to prepare all the nodes.
+Launch and initialize robot
+```
+roslaunch lite6_labauto lite6_labauto.launch
+rosrun lite6_labauto robot_init.py
+```
 
+First launch the solution_stack.launch file to prepare all the nodes.
 ```
 roslaunch solution_prep solution_stack.launch
 ```
