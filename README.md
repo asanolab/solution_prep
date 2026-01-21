@@ -1,8 +1,19 @@
-# Launch file
-First launch the solution_stack.launch file to prepare all the nodes.
-
+# Install
 ```
-$ roslaunch solution_prep solution_stack.launch
+python3 -m pip install torch torchvision
+```
+
+# Launch file
+Launch and initialize robot
+```
+roslaunch lite6_labauto lite6_labauto.launch
+rosrun lite6_labauto robot_init.py
+rosrun lite6_labauto robot_move.py
+```
+
+First launch the solution_stack.launch file to prepare all the nodes.
+```
+roslaunch solution_prep solution_stack.launch
 ```
 
 # Conduct experiments
@@ -10,7 +21,7 @@ $ roslaunch solution_prep solution_stack.launch
 
 2. Or use orchestrator node to conduct the whole experiment of solution preparation at a target pH.
 ```
-$ rosrun solution_prep orchestrator.py
+rosrun solution_prep orchestrator.py
 ```
 
 Avaiable parameters:

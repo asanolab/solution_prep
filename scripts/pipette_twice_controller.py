@@ -4,10 +4,10 @@
 import rospy
 from std_msgs.msg import Header, Float32
 from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
-from my_robot_msgs.msg import LabwareOBB
+from lite6_labauto.msg import LabwareOBB
 from moveit_commander import MoveGroupCommander, RobotCommander
 from tf.transformations import quaternion_from_euler
-from my_robot_msgs.msg import MovePose
+from lite6_labauto.msg import MovePose
 from xarm_msgs.srv import Move
 import numpy as np
 from std_msgs.msg import Bool
@@ -22,7 +22,7 @@ import torch
 import torch.nn.functional as F
 from torchvision import transforms
 import sys
-from my_robot_msgs.srv import PipetteDoTwice, PipetteDoTwiceResponse
+from lite6_labauto.srv import PipetteDoTwice, PipetteDoTwiceResponse
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:

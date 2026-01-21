@@ -9,7 +9,7 @@ project(solution_prep)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
-  my_robot_msgs
+  lite6_labauto
   roscpp
   rospy
   std_msgs
