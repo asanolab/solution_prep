@@ -26,7 +26,7 @@ from lite6_labauto.srv import PipetteDo, PipetteDoResponse
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
-    sys.path.insert(0, script_dir)  # 放在最前面，避免被覆盖
+    sys.path.insert(0, script_dir)  
 
 print("[DEBUG] Added to sys.path:", script_dir)
 
@@ -37,7 +37,7 @@ class PipetteController:
     def __init__(self):
         rospy.init_node('pipette_controller', anonymous=True)
 
-        # 订阅
+        # ros sub
         rospy.Subscriber("/labware/tip_rack5/obb", LabwareOBB, self.cb_tip_rack)
         rospy.Subscriber("/labware/pipette4/obb", LabwareOBB, self.cb_pipette)
         rospy.Subscriber("/labware/beaker0/obb", LabwareOBB, self.cb_hcl_beaker)
@@ -51,7 +51,7 @@ class PipetteController:
         rospy.Subscriber("/camera/color/image_raw", Image, self.cb_color)
         self.offset = 0.055
 
-        # 数据缓存
+        # data
         self.tip_rack_pose = None
         self.pipette_pose = None
         self.hcl_beaker_pose = None
@@ -68,24 +68,24 @@ class PipetteController:
         self.latest_color = None
         self.latest_color_time = rospy.Time()
 
-        # 机械臂控制
+        # robot arm control
         self.pose_pub = rospy.Publisher("/arm_control/move_pose", MovePose, queue_size=1)
 
-        # 夹爪控制（占位，根据你的实际控制方法替换）
+        # gripper control
         self.gripper_pub = rospy.Publisher('/gripper/target_distance', Float32, queue_size=10)
 
-        # pipette motor控制
+        # pipette motor control
         self.pipette_motor_pub = rospy.Publisher('/pipette_motor/trigger', Bool, queue_size=10)
 
-        # pipetty 控制
+        # pipetty control
         self.pipetty_aspirate_pub = rospy.Publisher('/pipetty/aspirate', Float32, queue_size=10)
         self.pipetty_home_pub = rospy.Publisher('/pipetty/home', Bool, queue_size=10)
 
         # tip recognition
         self.debug_image_pub = rospy.Publisher('tip_recognition/color_image', Image, queue_size=1)
 
-        # === 模型路径解析 ===
-        # 模型路径
+        # === model dir ===
+        # model dir
         script_dir = os.path.dirname(os.path.realpath(__file__))
         default_model_path = os.path.join(script_dir, "1734448311.8315692", "best.pth")
         model_path = rospy.get_param("~model_path", default_model_path)
@@ -97,17 +97,17 @@ class PipetteController:
         self.model = self.load_model()
 
         self.transform = transforms.Compose([
-            transforms.ToTensor(),  # 期望输入是 RGB 顺序
+            transforms.ToTensor(),  # desired input order: RGB
             transforms.Normalize((0.5, 0.5, 0.5),
                                  (0.5, 0.5, 0.5))
         ])
 
-        # 服务
+        # srv
         self._busy_lock = threading.Lock()
 
         self.do_srv = rospy.Service("/pipette/do", PipetteDo, self.cb_pipette_do)
 
-    # 回调
+    # callback
     def cb_tip_rack(self, msg):
         self.tip_rack_pose = msg
 
@@ -163,11 +163,11 @@ class PipetteController:
             rospy.logerr(f"pipette_do failed: {e}")
             return PipetteDoResponse(False, str(e))
 
-    # -------------------- 各步骤 ------------------------
+    # -------------------- each step ------------------------
 
-    # ----------------- 机械臂控制 -----------------------
+    # ----------------- robot arm control -----------------------
 
-    # for debug: 控制机械臂直接前往arm_pose，其中arm_pose单位为[mm,mm,mm,deg,deg,deg]
+    # for debug: control robot arm directly to arm_pose，units: [mm,mm,mm,deg,deg,deg]
     def go_to_arm_pose(self, arm_pose):
         pose = MovePose()
         x_mm = arm_pose[0]
@@ -183,16 +183,16 @@ class PipetteController:
         self.pose_pub.publish(pose)
         rospy.sleep(2.0)
 
-    def go_to_pose_offset(self, base_pose, x_offset=0.0, y_offset=0.0, z_offset=0.0):  # z: 单位m
-        """将 OBB pose + z 偏移 → 转换为机械臂 MovePose"""
+    def go_to_pose_offset(self, base_pose, x_offset=0.0, y_offset=0.0, z_offset=0.0):  # z unit: m
+        """OBB pose + z offset → MovePose"""
 
         rospy.loginfo(f"type of pose: {type(base_pose)}")
-        # OBB 的位置
+        # OBB position
         x_mm = base_pose.pose.position.x * 1000
         y_mm = (base_pose.pose.position.y - y_offset) * 1000
         z_mm = (base_pose.z_height + z_offset + self.offset) * 1000
 
-        # OBB 四元数 → 欧拉角，取 yaw
+        # OBB quaternion → Euler angle, yaw
         quat = [
             base_pose.pose.orientation.x,
             base_pose.pose.orientation.y,
@@ -204,7 +204,7 @@ class PipetteController:
         if yaw_obb > 3.1415926:  # > π
             yaw_obb = yaw_obb - 3.1415926
 
-        # 固定 r, p，动态 yaw
+        # fixed r, p，changeable yaw
         roll = 179.1 * 3.1415926 / 180
         pitch = 5.6 * 3.1415926 / 180
         yaw = -1.5707963 + yaw_obb  # -90° + OBB yaw
@@ -213,7 +213,7 @@ class PipetteController:
 
         yaw = -1.57
 
-        # 发布 MovePose
+        # pub MovePose
         pose = MovePose()
         pose.pose = [x_mm, y_mm, z_mm, roll, pitch, yaw]
 
@@ -224,7 +224,7 @@ class PipetteController:
         self.pose_pub.publish(pose)
         rospy.sleep(2.0)
 
-    # ----------------- 夹爪控制 -------------------------
+    # ----------------- gripper control -------------------------
     def open_gripper(self, distance=52.0):
         rospy.loginfo(f"Opening gripper to {distance}m")
         self.gripper_pub.publish(Float32(distance))
@@ -235,7 +235,7 @@ class PipetteController:
         self.gripper_pub.publish(Float32(distance))
         rospy.sleep(1.0)
 
-    # ----------------- marker持续控制 -------------------------
+    # ----------------- marker-based control -------------------------
     def go_to_marker_offset(self, pose, z_offset=0.135):
 
         x_mm = pose.position.x * 1000
@@ -250,20 +250,20 @@ class PipetteController:
         ]
         _, _, yaw = tf_trans.euler_from_quaternion(quat)
 
-        # yaw > 180° 修正
+        # yaw > 180° 
         if yaw > 3.1415926:  # > π
             yaw = yaw - 3.1415926
 
         roll = 179.1 * 3.1415926 / 180
         pitch = 5.6 * 3.1415926 / 180
-        yaw = -1.5707963 + yaw  # -90° + marker yaw 修正后
+        yaw = -1.5707963 + yaw  # -90° + marker yaw 
 
         pose_msg = MovePose()
         pose_msg.pose = [x_mm, y_mm, z_mm, roll, pitch, yaw]
 
         self.pose_pub.publish(pose_msg)
 
-    # ----------------- 实验动作步骤 ----------------------
+    # ----------------- experiment steps ----------------------
     def pick_pipette(self):
         rospy.loginfo("Picking pipette...")
 
@@ -277,20 +277,20 @@ class PipetteController:
         z_mm1 = z_mm + 79.3
         z_mm2 = z_mm + 44.6
         y_mm1 = y_mm - 53.1
-        # 1️⃣ 到 pipette OBB 上方 5cm
+        # 1️⃣ go to pipette OBB, above 5cm
         # self.go_to_pose_offset(self.pipette_pose, y_offset=0.08, z_offset=0.05)
         self.open_gripper()
         rospy.sleep(0.1)
         self.go_to_arm_pose([x_mm, y_mm1, z_mm1, roll, pitch, yaw])
         rospy.sleep(2.0)
 
-        # 2️⃣ 找到最近 ArUco marker，返回 marker pose
+        # 2️⃣ find nearest ArUco marker，return marker pose
         # marker_pose = self.get_nearest_marker_pose()
         self.go_to_arm_pose([x_mm, y_mm, z_mm2, roll, pitch, yaw])
         rospy.loginfo("Searching for marker...")
 
         """
-        timeout = rospy.Duration(3.0)  # 超时时间，自行调整
+        timeout = rospy.Duration(3.0)  # timeout
         rate = rospy.Rate(10)
         #3️⃣ 去 marker 上方 13.5cm
         while not rospy.is_shutdown():
@@ -304,16 +304,16 @@ class PipetteController:
             rate.sleep()
         """
 
-        # 准备抓取
+        # grasp
         # rospy.sleep(0.1)
         self.go_to_arm_pose(([x_mm, y_mm, z_mm, roll, pitch1, yaw]))
 
-        # 闭合夹爪夹 pipette
+        # close gripper and grasp pipette
 
         self.close_gripper()
         rospy.sleep(0.5)
 
-        # 回到 pipette OBB 上方 5cm
+        # go back to pipette OBB, above 5cm
         # self.go_to_pose_offset(self.pipette_pose, z_offset=0.05)
         self.go_to_arm_pose([x_mm, y_mm, z_mm2, roll, pitch, yaw])
         rospy.sleep(0.5)
@@ -332,7 +332,7 @@ class PipetteController:
         pitch = 1.6
         yaw = -90.8
 
-        # 移动到最边缘tip的正上方
+        # go to corner tip
         rospy.loginfo("Go to rack corner tip")
         self.go_to_arm_pose([x_mm, y_mm, z_mm, roll, pitch, yaw])
         rospy.sleep(2.0)
@@ -358,7 +358,7 @@ class PipetteController:
 
             rospy.loginfo(f"Tip Recognition:: {pred_class} (conf={conf:2f})")
 
-            # ---- 绘制可视化框 ----
+            # ---- draw visualization box ----
             debug_img = self.latest_color.copy()
             size = self.roi_size_px
             x, y = int(center[0]), int(center[1])
@@ -372,10 +372,10 @@ class PipetteController:
             cv2.putText(debug_img, label, (x1, y1 - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
-            # ---- 发布调试图像 ----
+            # ---- pub debug image ----
             self.debug_image_pub.publish(self.bridge.cv2_to_imgmsg(debug_img, encoding="bgr8"))
 
-            # ---- 判决动作 ----
+            # ---- tip detection ----
             """
             if pred_class == 'tip' and conf > self.tip_conf_threshold:
 
@@ -425,19 +425,19 @@ class PipetteController:
         pitch = 25.4
         yaw = -90.5
 
-        # 到beaker上方
+        # go to beaker above
         self.go_to_arm_pose([x_mm, y_mm, z_mm, roll, pitch, yaw])
         rospy.sleep(0.2)
 
         y_mm2 = y_mm + 10.4
         z_mm2 = z_mm - 81.7
 
-        # 下降到beaker内部
+        # go down
         self.go_to_arm_pose([x_mm, y_mm2, z_mm2, roll, pitch, yaw])
 
         rospy.sleep(0.5)
 
-        # 吸引液体
+        # aspirate liquid
         rospy.loginfo(f"Aspirating liquid {volume} uL...")
 
         if volume >= 1000:
@@ -445,7 +445,7 @@ class PipetteController:
         self.pipetty_aspirate_pub.publish(Float32(volume))
         rospy.sleep(6.0)
 
-        # 上升到beaker上方
+        # go up
         self.go_to_arm_pose([x_mm, y_mm, z_mm, roll, pitch, yaw])
 
     def aspirate_water(self, volume=500):
@@ -458,7 +458,7 @@ class PipetteController:
         pitch = 29.1
         yaw = -56
 
-        # 到beaker上方
+        # go to water beaker
         self.go_to_arm_pose([x_mm, y_mm, z_mm, roll, pitch, yaw])
         rospy.sleep(0.2)
 
@@ -466,12 +466,12 @@ class PipetteController:
         y_mm2 = 334.7
         z_mm2 = 337.5
 
-        # 下降到beaker内部
+        # go down
         self.go_to_arm_pose([x_mm2, y_mm2, z_mm2, roll, pitch, yaw])
 
         rospy.sleep(0.5)
 
-        # 吸引液体
+        # aspirate water
         rospy.loginfo("Aspirating liquid...")
 
         if volume >= 1000:
@@ -479,7 +479,7 @@ class PipetteController:
         self.pipetty_aspirate_pub.publish(Float32(volume))
         rospy.sleep(6.0)
 
-        # 上升到beaker上方
+        # go up
         self.go_to_arm_pose([x_mm, y_mm, z_mm, roll, pitch, yaw])
 
     def dispense(self):
@@ -491,12 +491,12 @@ class PipetteController:
         roll = 175
         pitch = 24.6
         yaw = -68.9
-        # 到beaker上方
+        # go to dispensing beaker
         self.go_to_arm_pose([x_mm, y_mm, z_mm, roll, pitch, yaw])
 
         rospy.sleep(0.5)
 
-        # 下降到beaker内部
+        # go down
         y_mm2 = y_mm + 13.9
         z_mm2 = z_mm - 36.9
 
@@ -597,7 +597,7 @@ class PipetteController:
         return roi
 
     def predict_tip_or_hole(self, roi_bgr):
-        # 关键：BGR → RGB
+        # ：BGR → RGB
         roi_rgb = cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2RGB)
         tensor = self.transform(roi_rgb).unsqueeze(0).to(self.device)
         with torch.no_grad():
@@ -615,7 +615,7 @@ class PipetteController:
         return (c_x, c_y)
 
 
-# -------------------- 主函数 ------------------------
+# -------------------- main ------------------------
 
 if __name__ == '__main__':
     controller = PipetteController()
