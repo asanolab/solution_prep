@@ -1,6 +1,6 @@
 # Install
 ```
-python3 -m pip install torch
+python3 -m pip install torch torchvision
 ```
 
 # Launch file
