@@ -1,3 +1,4 @@
+<?xml version="1.0" ?>
 <launch>
   <!-- 把三个节点放在同一个分组/命名空间下 -->
   <group ns="solution_preparation">

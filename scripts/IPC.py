@@ -3,7 +3,7 @@
 
 import rospy
 from std_msgs.msg import Float32
-from my_robot_msgs.srv import PipetteDoTwice, TweezersDraw
+from lite6_labauto.srv import PipetteDoTwice, TweezersDraw
 import numpy as np
 
 

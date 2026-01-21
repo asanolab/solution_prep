@@ -7,9 +7,9 @@ import tf.transformations as tf_trans
 
 from std_msgs.msg import Float32
 from geometry_msgs.msg import PoseStamped
-from my_robot_msgs.msg import MovePose
-from my_robot_msgs.msg import LabwareOBB  # ← 如果你的 LabwareOBB 在别的包，请改这里
-from my_robot_msgs.srv import TweezersDraw, TweezersDrawResponse
+from lite6_labauto.msg import MovePose
+from lite6_labauto.msg import LabwareOBB  # ← 如果你的 LabwareOBB 在别的包，请改这里
+from lite6_labauto.srv import TweezersDraw, TweezersDrawResponse
 
 
 class PhSensorController:
