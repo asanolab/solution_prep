@@ -11,8 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 )
 
-
-## Generate services in the 'srv' folder
 add_service_files(
   FILES
   BeakerMani.srv
@@ -22,6 +20,11 @@ add_service_files(
   TweezersDraw.srv
   )
 
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
+  )
 
 catkin_package(
   CATKIN_DEPENDS message_generation message_runtime std_msgs geometry_msgs
