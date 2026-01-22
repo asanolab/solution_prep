@@ -75,7 +75,7 @@ class PipetteController:
         self.gripper_pub = rospy.Publisher('/gripper/target_distance', Float32, queue_size=10)
 
         # pipette motor control
-        self.pipette_motor_pub = rospy.Publisher('/pipette_motor/trigger', Bool, queue_size=10)
+        self.pipette_motor_pub = rospy.Publisher('/pipetty_motor/trigger', Bool, queue_size=10)
 
         # pipetty control
         self.pipetty_aspirate_pub = rospy.Publisher('/pipetty/aspirate', Float32, queue_size=10)
