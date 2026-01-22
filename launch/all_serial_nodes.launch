@@ -13,7 +13,7 @@
 
   <group ns="robot_control">
     <!-- ph_sensor -->
-    <include file="$(find lite6_labauto)/launch/ph_sensor.launch">
+    <include file="$(find solution_prep)/launch/ph_sensor.launch">
       <arg name="port"            value="$(arg ph_port)" />
       <arg name="baud"            value="$(arg ph_baud)" />
       <arg name="publish_voltage" value="$(arg ph_publish_voltage)" />

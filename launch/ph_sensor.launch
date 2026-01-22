@@ -6,7 +6,7 @@
   <arg name="publish_voltage" default="false"/>
 
   <!-- ph_sensor_node -->
-  <node pkg="lite6_labauto" type="pH_serial.py" name="ph_sensor_node" output="screen" respawn="true">
+  <node pkg="solution_prep" type="pH_serial.py" name="ph_sensor_node" output="screen" respawn="true">
     <param name="port"            value="$(arg port)"/>
     <param name="baud"            value="$(arg baud)"/>
     <param name="publish_voltage" value="$(arg publish_voltage)"/>
