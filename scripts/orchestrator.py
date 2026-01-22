@@ -3,7 +3,7 @@
 
 import rospy
 from std_msgs.msg import Float32
-from lite6_labauto.srv import PipetteDo, BeakerMani, pHMeasure
+from solution_prep.srv import PipetteDo, BeakerMani, pHMeasure
 import numpy as np
 
 

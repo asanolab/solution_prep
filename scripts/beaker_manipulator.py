@@ -8,7 +8,7 @@ import tf.transformations as tf_trans
 from std_msgs.msg import Float32
 from geometry_msgs.msg import PoseStamped
 from lite6_labauto.msg import MovePose, LabwareOBB  # ← LabwareOBB 如在别的包请改导入
-from lite6_labauto.srv import BeakerMani, BeakerManiResponse
+from solution_prep.srv import BeakerMani, BeakerManiResponse
 
 
 class BeakerManipulator:
