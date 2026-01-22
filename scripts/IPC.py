@@ -3,7 +3,7 @@
 
 import rospy
 from std_msgs.msg import Float32
-from lite6_labauto.srv import PipetteDoTwice, TweezersDraw
+from solution_prep.srv import PipetteDoTwice, TweezersDraw
 import numpy as np
 
 
@@ -11,10 +11,10 @@ class SolutionOrchestrator(object):
     def __init__(self):
         rospy.init_node("solution_orchestrator", anonymous=True)
 
-        # ===== 前提输入参数（必填/建议在 launch 里给）=====
+        # ===== parameters =====
         self.volume = 500  # uL
 
-        # ===== Service 代理 =====
+        # ===== Service client =====
         rospy.loginfo("Waiting for services ...")
         rospy.wait_for_service("/pipette/dotwice")
         rospy.wait_for_service("/tweezers/draw")
@@ -23,11 +23,11 @@ class SolutionOrchestrator(object):
         rospy.loginfo("Services ready.")
 
 
-        # ===== 内部状态 =====
-        self.tip_id = 0  # 每轮递增：0,1,2,...
+        # ===== internal state =====
+        self.tip_id = 0  # added per loop：0,1,2,...
 
 
-    # ===== 主流程 =====
+    # ===== main =====
     def run(self):
 
         # pipette
