@@ -3,7 +3,7 @@
 python3 -m pip install torch torchvision
 ```
 
-# for IPC experiment
+# Conduct experiments
 **Launch and initialize robot**
 ```
 roslaunch lite6_labauto lite6_labauto.launch
@@ -16,6 +16,12 @@ rosrun lite6_labauto robot_move.py
 roslaunch auto_pipetty auto_pipetty.launch
 ```
 
+**Experiment nodes**
+First launch the solution_stack.launch file to prepare all the nodes.
+```
+roslaunch solution_prep solution_stack.launch
+```
+
 **Start experiment**  
 - Robot motion start by the command
 - Prepare emergency button before execution
@@ -24,12 +30,8 @@ rosrun solution_prep IPC.py
 ```
 
 
-# other experiment
-First launch the solution_stack.launch file to prepare all the nodes.
-```
-roslaunch solution_prep solution_stack.launch
-```
 
+# Others
 ## Conduct experiments
 1. Use srv to conduct steps of experiments.
 
