@@ -9,7 +9,7 @@ from std_msgs.msg import Float32
 from geometry_msgs.msg import PoseStamped
 from lite6_labauto.msg import MovePose
 from lite6_labauto.msg import LabwareOBB  # ← 如果你的 LabwareOBB 在别的包，请改这里
-from lite6_labauto.srv import TweezersDraw, TweezersDrawResponse
+from solution_prep.srv import TweezersDraw, TweezersDrawResponse
 
 
 class PhSensorController:

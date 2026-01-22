@@ -22,7 +22,7 @@ import torch
 import torch.nn.functional as F
 from torchvision import transforms
 import sys
-from lite6_labauto.srv import PipetteDoTwice, PipetteDoTwiceResponse
+from solution_prep.srv import PipetteDoTwice, PipetteDoTwiceResponse
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
